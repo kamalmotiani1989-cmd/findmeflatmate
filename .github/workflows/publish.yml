@@ -69,6 +69,10 @@ jobs:
           else
             echo "Pages is not switched on yet: Settings -> Pages -> Deploy from a branch -> main / (root)." | tee -a "$GITHUB_STEP_SUMMARY"
           fi
+          # Before DNS points here the domain shows the registrar's parking page, so look for the app's title.
           for u in https://findmeflatmate.com/ https://www.findmeflatmate.com/ http://findmeflatmate.com/; do
-            echo "$u -> $(curl -s -o /dev/null -m 15 -w '%{http_code} %{redirect_url}' "$u" || echo unreachable)" | tee -a "$GITHUB_STEP_SUMMARY"
+            code=$(curl -s -o page.html -m 15 -w '%{http_code} %{redirect_url}' "$u" || echo unreachable)
+            grep -q "<title>FindMeFlatMate</title>" page.html 2>/dev/null && what="FindMeFlatMate" || what="not this site yet"
+            echo "$u -> $code ($what)" | tee -a "$GITHUB_STEP_SUMMARY"
           done
+          rm -f page.html
