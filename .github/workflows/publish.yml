@@ -1,7 +1,8 @@
 name: Publish FindMeFlatMate
 
 # Copies the web app (flatmates/ in kamalmotiani1989-cmd/NavigateMe, main branch) to the
-# root of this repo's main branch, which GitHub Pages serves at https://findmeflatmate.com.
+# root of this repo's main branch and mirrors it to gh-pages, which GitHub Pages serves at
+# https://findmeflatmate.com.
 # Runs every 30 minutes and on demand (Actions -> Publish FindMeFlatMate -> Run workflow);
 # it commits only when the app has changed.
 on:
@@ -42,12 +43,19 @@ jobs:
       - name: Commit and push
         run: |
           git add -A
-          if git diff --cached --quiet; then echo "The site is up to date."; exit 0; fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -qm "Publish the app from NavigateMe ${SRC_SHA}"
-          git push -q origin HEAD:main
-          echo "PUSHED=1" >> "$GITHUB_ENV"
+          if git diff --cached --quiet; then
+            echo "The site is up to date."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -qm "Publish the app from NavigateMe ${SRC_SHA}"
+            git push -q origin HEAD:main
+          fi
+          # Pages publishes gh-pages; keep it the same as main.
+          if [ "$(git rev-parse HEAD)" != "$(git ls-remote origin refs/heads/gh-pages | cut -f1)" ]; then
+            git push -q -f origin HEAD:gh-pages
+            echo "PUSHED=1" >> "$GITHUB_ENV"
+          fi
 
       # Pages rebuilds on push; ask once more in case a push by this workflow is not picked up.
       - name: Request a Pages build
@@ -56,7 +64,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh api -X POST "repos/${{ github.repository }}/pages/builds" --silent ||
-            echo "::notice::Pages is not switched on yet: Settings -> Pages -> Deploy from a branch -> main / (root)."
+            echo "::notice::Pages is not switched on yet: Settings -> Pages -> Deploy from a branch -> gh-pages / (root)."
 
       # Pages can only be switched on by a repo admin, so this just reports where things stand.
       - name: Pages status
@@ -67,7 +75,7 @@ jobs:
           if info=$(gh api "repos/${{ github.repository }}/pages" 2>/dev/null); then
             echo "$info" | jq -r '"Pages: \(.html_url) | domain: \(.cname // "-") | HTTPS enforced: \(.https_enforced) | status: \(.status // "-")"' | tee -a "$GITHUB_STEP_SUMMARY"
           else
-            echo "Pages is not switched on yet: Settings -> Pages -> Deploy from a branch -> main / (root)." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "Pages is not switched on yet: Settings -> Pages -> Deploy from a branch -> gh-pages / (root)." | tee -a "$GITHUB_STEP_SUMMARY"
           fi
           # Before DNS points here the domain shows the registrar's parking page, so look for the app's title.
           for u in https://findmeflatmate.com/ https://www.findmeflatmate.com/ http://findmeflatmate.com/; do

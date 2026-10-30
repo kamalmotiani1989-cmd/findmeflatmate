@@ -2,10 +2,11 @@
 
 This repo is the website at **https://findmeflatmate.com**. Its files are copied from the app's
 source, `flatmates/` in [kamalmotiani1989-cmd/NavigateMe](https://github.com/kamalmotiani1989-cmd/NavigateMe),
-by `.github/workflows/publish.yml` (every 30 minutes, or on demand from the Actions tab).
-Change the app there, not here: copied files are overwritten on the next run.
+by `.github/workflows/publish.yml` (every 30 minutes, or on demand from the Actions tab), which
+commits them to `main` and mirrors `main` to `gh-pages`. Change the app there, not here: copied
+files are overwritten on the next run.
 
-GitHub Pages: Settings → Pages → Deploy from a branch → `main`, `/ (root)`, custom domain
+GitHub Pages: Settings → Pages → Deploy from a branch → `gh-pages`, `/ (root)`, custom domain
 `findmeflatmate.com`, Enforce HTTPS.
 
 DNS for `findmeflatmate.com`:
