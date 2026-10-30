@@ -1,0 +1,59 @@
+name: Publish FindMeFlatMate
+
+# Copies the web app (flatmates/ in kamalmotiani1989-cmd/NavigateMe, main branch) to the
+# root of this repo's main branch, which GitHub Pages serves at https://findmeflatmate.com.
+# Runs every 30 minutes and on demand (Actions -> Publish FindMeFlatMate -> Run workflow);
+# it commits only when the app has changed.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy the app from NavigateMe
+        run: |
+          src="$RUNNER_TEMP/navigateme"
+          git clone -q --depth=1 --filter=blob:none --sparse https://github.com/kamalmotiani1989-cmd/NavigateMe.git "$src"
+          git -C "$src" sparse-checkout set flatmates
+          echo "SRC_SHA=$(git -C "$src" rev-parse --short HEAD)" >> "$GITHUB_ENV"
+          # The app without the Android project, the database scripts or its README.
+          # This repo's own files (workflow, README, CNAME, .nojekyll) are left alone.
+          rsync -a --delete \
+            --exclude=/.git/ --exclude=/.github/ --exclude=/README.md --exclude=/CNAME --exclude=/.nojekyll \
+            --exclude=/android/ --exclude=/supabase/ \
+            "$src/flatmates/" ./
+          echo "findmeflatmate.com" > CNAME
+          touch .nojekyll
+          git status --short
+
+      - name: Commit and push
+        run: |
+          git add -A
+          if git diff --cached --quiet; then echo "The site is up to date."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qm "Publish the app from NavigateMe ${SRC_SHA}"
+          git push -q origin HEAD:main
+          echo "PUSHED=1" >> "$GITHUB_ENV"
+
+      # Pages rebuilds on push; ask once more in case a push by this workflow is not picked up.
+      - name: Request a Pages build
+        if: env.PUSHED == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/pages/builds" --silent ||
+            echo "::notice::Pages is not switched on yet: Settings -> Pages -> Deploy from a branch -> main / (root)."
