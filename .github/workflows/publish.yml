@@ -71,7 +71,7 @@ jobs:
           fi
           # Before DNS points here the domain shows the registrar's parking page, so look for the app's title.
           for u in https://findmeflatmate.com/ https://www.findmeflatmate.com/ http://findmeflatmate.com/; do
-            code=$(curl -s -o page.html -m 15 -w '%{http_code} %{redirect_url}' "$u" || echo unreachable)
+            code=$(curl -sL -o page.html -m 20 -w '%{http_code} at %{url_effective}' "$u" || echo unreachable)
             grep -q "<title>FindMeFlatMate</title>" page.html 2>/dev/null && what="FindMeFlatMate" || what="not this site yet"
             echo "$u -> $code ($what)" | tee -a "$GITHUB_STEP_SUMMARY"
           done
