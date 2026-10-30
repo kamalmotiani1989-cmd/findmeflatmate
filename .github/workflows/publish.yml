@@ -74,11 +74,9 @@ jobs:
         run: |
           if info=$(gh api "repos/${{ github.repository }}/pages" 2>/dev/null); then
             echo "$info" | jq -r '"Pages: \(.html_url) | domain: \(.cname // "-") | certificate: \(.https_certificate.state // "-") | HTTPS enforced: \(.https_enforced) | status: \(.status // "-")"' | tee -a "$GITHUB_STEP_SUMMARY"
-            # Once GitHub has issued the certificate, switch on Enforce HTTPS (http:// then redirects to https://).
-            if [ "$(echo "$info" | jq -r .https_enforced)" = "false" ] && [ "$(echo "$info" | jq -r .cname)" != "null" ]; then
-              gh api -X PUT "repos/${{ github.repository }}/pages" -F https_enforced=true --silent \
-                && echo "Enforce HTTPS: switched on." | tee -a "$GITHUB_STEP_SUMMARY" \
-                || echo "Enforce HTTPS: not yet (the certificate may still be on its way, or it needs a click in Settings -> Pages)." | tee -a "$GITHUB_STEP_SUMMARY"
+            # Only a repo admin can change this (the workflow's token gets a 403), so just say so.
+            if [ "$(echo "$info" | jq -r .https_enforced)" = "false" ]; then
+              echo "::notice::Tick Enforce HTTPS in Settings -> Pages so http:// redirects to https://."
             fi
           else
             echo "Pages is not switched on yet: Settings -> Pages -> Deploy from a branch -> gh-pages / (root)." | tee -a "$GITHUB_STEP_SUMMARY"
