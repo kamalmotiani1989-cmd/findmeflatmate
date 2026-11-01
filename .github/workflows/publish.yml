@@ -2,7 +2,10 @@ name: Publish FindMeFlatMate
 
 # Copies the web app (flatmates/ in kamalmotiani1989-cmd/NavigateMe, main branch) to the
 # root of this repo's main branch and mirrors it to gh-pages, which GitHub Pages serves at
-# https://findmeflatmate.com.
+# https://findmeflatmate.com. The pages are published compacted (no source comments or spacing),
+# and the Android app is copied to this repo's "flatmates-apk" release, so the download link
+# works even with NavigateMe private.
+# NavigateMe private: add a read-only token for it as the SOURCE_TOKEN secret here (see README).
 # Runs every 30 minutes and on demand (Actions -> Publish FindMeFlatMate -> Run workflow);
 # it commits only when the app has changed.
 on:
@@ -25,9 +28,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Copy the app from NavigateMe
+        env:
+          SOURCE_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
           src="$RUNNER_TEMP/navigateme"
-          git clone -q --depth=1 --filter=blob:none --sparse https://github.com/kamalmotiani1989-cmd/NavigateMe.git "$src"
+          repo="github.com/kamalmotiani1989-cmd/NavigateMe.git"
+          if [ -n "$SOURCE_TOKEN" ]; then url="https://x-access-token:${SOURCE_TOKEN}@${repo}"; else url="https://${repo}"; fi
+          git clone -q --depth=1 --filter=blob:none --sparse "$url" "$src"
           git -C "$src" sparse-checkout set flatmates
           echo "SRC_SHA=$(git -C "$src" rev-parse --short HEAD)" >> "$GITHUB_ENV"
           # The app without the Android project, the database scripts or its README.
@@ -38,6 +45,20 @@ jobs:
             "$src/flatmates/" ./
           echo "findmeflatmate.com" > CNAME
           touch .nojekyll
+
+      # The pages as browsers need them: without the source's comments and spacing, and with short
+      # names inside functions. If the compactor fails, the page goes out as it is.
+      - name: Compact the pages
+        run: |
+          for f in index.html privacy.html; do
+            if npx -y html-minifier-terser@7.2.0 --remove-comments --minify-css true \
+                 --minify-js '{"compress":false,"mangle":true,"format":{"comments":false}}' -o "$RUNNER_TEMP/$f" "$f" \
+               && grep -q "<title>" "$RUNNER_TEMP/$f"; then
+              mv "$RUNNER_TEMP/$f" "$f"
+            else
+              echo "::warning::$f was published without compacting."
+            fi
+          done
           git status --short
 
       - name: Commit and push
@@ -56,6 +77,31 @@ jobs:
             git push -q -f origin HEAD:gh-pages
             echo "PUSHED=1" >> "$GITHUB_ENV"
           fi
+
+      # The Android app: NavigateMe's newest build, copied to this repo's own "flatmates-apk" release when it changes
+      # (the release notes name the build). The app's download link points here:
+      # https://github.com/kamalmotiani1989-cmd/findmeflatmate/releases/download/flatmates-apk/flatmates.apk
+      - name: Copy the Android app
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_TOKEN: ${{ secrets.SOURCE_TOKEN }}
+        run: |
+          from=kamalmotiani1989-cmd/NavigateMe
+          read_token="${SOURCE_TOKEN:-$GH_TOKEN}"
+          new=$(GH_TOKEN="$read_token" gh release view flatmates-apk -R "$from" --json body -q .body 2>/dev/null || true)
+          if [ -z "$new" ]; then echo "::warning::Could not read the Android build in $from (private without SOURCE_TOKEN?)."; exit 0; fi
+          old=$(gh release view flatmates-apk -R "$GITHUB_REPOSITORY" --json body -q .body 2>/dev/null || true)
+          if [ "$new" = "$old" ]; then echo "The Android app is up to date: $new"; exit 0; fi
+          GH_TOKEN="$read_token" gh release download flatmates-apk -R "$from" -p flatmates.apk -D "$RUNNER_TEMP/apk" --clobber
+          unzip -tq "$RUNNER_TEMP/apk/flatmates.apk"
+          if gh release view flatmates-apk -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload flatmates-apk "$RUNNER_TEMP/apk/flatmates.apk" -R "$GITHUB_REPOSITORY" --clobber
+            gh release edit flatmates-apk -R "$GITHUB_REPOSITORY" --notes "$new"
+          else
+            gh release create flatmates-apk "$RUNNER_TEMP/apk/flatmates.apk" -R "$GITHUB_REPOSITORY" \
+              --title "FindMeFlatMate for Android" --notes "$new" --target main
+          fi
+          echo "Copied the Android app: $new" | tee -a "$GITHUB_STEP_SUMMARY"
 
       # Pages rebuilds on push; ask once more in case a push by this workflow is not picked up.
       - name: Request a Pages build
