@@ -41,10 +41,19 @@ jobs:
           # This repo's own files (workflow, README, CNAME, .nojekyll) are left alone.
           rsync -a --delete \
             --exclude=/.git/ --exclude=/.github/ --exclude=/README.md --exclude=/CNAME --exclude=/.nojekyll \
-            --exclude=/android/ --exclude=/supabase/ \
+            --exclude=/android/ --exclude=/supabase/ --exclude=/ON_HOLD \
             "$src/flatmates/" ./
           echo "findmeflatmate.com" > CNAME
           touch .nojekyll
+
+      # On hold: while NavigateMe has flatmates/ON_HOLD, the home page is hold.html (Coming soon) instead of the
+      # app. Delete that file in NavigateMe to bring the app back (README there, "On hold").
+      - name: On hold?
+        run: |
+          if [ -f "$RUNNER_TEMP/navigateme/flatmates/ON_HOLD" ]; then
+            cp hold.html index.html
+            echo "On hold: the home page is the Coming soon page." | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
 
       # The pages as browsers need them: without the source's comments and spacing, and with short
       # names inside functions. If the compactor fails, the page goes out as it is.
