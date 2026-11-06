@@ -16,7 +16,11 @@ Kamal sits with the team this Sunday (9 Nov); time to be shared. Mark and Salu b
 pushed, so the discussion is about choices, not reading.
 
 ## Teche (tech)
-1. **Improve the app's UI and user experience, page by page.** Kamal's task, above everything else. Go through every
+0. **First, 6 Nov: stop the team and marketing folders being published.** This repo's website workflow copies
+   `flatmates/` to gh-pages minus android, supabase and README, so `team/`, `marketing/` and `tests/` are on gh-pages now.
+   One PR adding three excludes to the tar line; Kamal merges it at once. The website repo's publish.yml needs the same
+   three lines: Kamal pastes them or gives Teche push access there. Nothing else until this PR is open.
+1. **Improve the app's UI and user experience, page by page.** Kamal's task; item 3 below (Kamal, 6 Nov) now comes first, then the next UI batch. Go through every
    page and screen of `flatmates/index.html` (welcome and sign-in flow, the onboarding questions, Discover, a home's
    page and the compatibility analysis, the posting form, Tribe, Escape, Flatsplits, FlatMart, Account, the Coming
    soon screen). For each one write down what is hard, slow, unclear or ugly for a first-time user on a phone, then
@@ -28,9 +32,19 @@ pushed, so the discussion is about choices, not reading.
    and a home's page), tests green on each; waiting for Kamal. Merging: this first batch waits for Kamal's look. From
    the next batch, your brief applies: merge when green, list every change in your report, and Kamal drops anything he
    dislikes afterwards. The sign-in card is the exception: anything touching it waits for Kamal._
-2. Keep main green: demo suites pass on every push, the Android build succeeds (last known build 74).
-3. Mark's Pixel and conversion wiring (below) waits on Kamal's IDs; do it when they arrive, between pages.
-4. Anything Kamal asks for directly comes first and is noted in your report.
+2. **Video on a listing: dropped by Kamal, 6 Nov.** Not to be built. (Teche's costing, for the record: video at scale
+   needs the Supabase Pro plan; photos alone fill the Free plan at about 550 listings.)
+3. **Auto-beautify uploaded photos (Kamal, 6 Nov).** When photos are uploaded to a listing, improve them automatically
+   so they look clear and bright: fix orientation, auto-level brightness and contrast, lift dark rooms, light sharpening,
+   straighten obvious tilt if cheap to do, and resize and compress to a sensible size for phones. Done on the phone
+   before upload, so storage shrinks rather than grows. Business reason: most listing photos are dark, tilted phone shots
+   and the good flats lose to the ones with better photos. Honesty rule, from Kamal's facts-only rule: enhance light,
+   colour and sharpness only; never remove, add or alter anything in the room, and keep the original so the owner can
+   switch back ("Use original") per photo. Tests cover the enhancement running, the toggle, and that an already good photo
+   is not made worse. Report before and after examples to Kamal in your report.
+4. Keep main green: demo suites pass on every push, the Android build succeeds (last known build 74).
+5. Mark's Pixel and conversion wiring (below) waits on Kamal's IDs; do it when they arrive, between pages.
+6. Anything Kamal asks for directly comes first and is noted in your report.
 
 ## Mark (marketing)
 1. **Done 6 Nov: PR #48, the competitor and ad study, waits for Kamal and Sunday.** Add the Meta Ad Library and Google ad copy once Kamal sends screenshots or allows the session to read those sites. The task was: study the other flat-rental and flatmate companies and their ads. India first

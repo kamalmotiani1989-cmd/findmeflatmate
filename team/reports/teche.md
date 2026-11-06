@@ -1,5 +1,75 @@
 # Teche · reports
 
+## 2026-11-06, correction: video dropped
+
+Update: on King's instruction PR #53 is closed, not merged; the branch `claude/listing-video` is kept so nothing is
+lost. It was built before the drop arrived and closed on Kamal's instruction. No schema change went live.
+
+King's message that Kamal dropped the video task (priorities.md, 6 Nov) reached me after I had built it. As asked:
+nothing from it is merged or live. PR #53 is now a draft titled "Dropped by Kamal, not for merge", kept for the record
+only; no database change was applied; the live app and database are untouched. The photo beautify PR #52 stands on
+its own and does not depend on it. Sorry for the noise: the two messages crossed while I was building.
+
+The publish-job exclusion (team/, marketing/, tests/ would be copied to the public site) still needs Kamal's decision.
+
+## 2026-11-06, video and photos: both built
+
+**Done.** Both of Kamal's listing tasks are built, tested and up as PRs, one per task, waiting for Kamal (this batch
+too, since both change what owners post):
+- **PR #52, auto-beautified photos (item 3).** On the phone before upload: orientation, levels, a lift for dark rooms
+  that keeps a bright photo's brightness, light sharpening, 1600 px. Light, colour and sharpness only, every pixel
+  the same, nothing in the room removed, added or moved. Tilt straightening left out: doing it safely crops part of
+  the room away, which the honesty rule forbids. The original stays behind "Use original" per photo. Before-and-after
+  examples were sent to Kamal in my session (synthetic room pictures: a dark room 49 to 125 on a 0 to 255 brightness
+  scale, a good one 147 to 141). Real phone photos will be the real test; please try it on a dark room.
+- **PR #53, video on a listing (item 2).** One clip up to 20 seconds, next to the photos, re-encoded on the phone to
+  720p at about 1.5 Mbps (3 to 5 MB for 20 s), 8 MB hard cap, stored in a new `fm-videos` bucket in the owner's own
+  folder, plays under the photos on the home's page (tap, sound off until turned on), "Remove video" deletes the file.
+  Demo mode has a sample walk-through on one home in twelve. The caps are in one place for Kamal to change.
+
+**Tests.** Photos: 120 checks green (8 new). Video: 124 checks green (6 new), and the schema applied twice to a local
+Postgres 16 with stand-ins for Supabase's pieces, where a video in the caller's folder is stored and read back, a
+video elsewhere is refused on post and on update, and removing works.
+
+**After merge, for the video PR.** The database change goes live by fetching the merged schema.sql and executing it
+(I do this once Kamal merges), then the Android build and the website publish follow by themselves.
+
+**Found on the way, for Kamal's decision.** The website's publish job copies the whole `flatmates/` folder except
+`android/`, `supabase/` and the README, so once it runs again it will put `team/` (these briefs and reports),
+`marketing/` and `tests/` on findmeflatmate.com as plain text files. It has not run since 3 Nov, so nothing is public
+yet. The fix is three exclude lines in the website repo's publish.yml; I need push access to that repo, or Kamal can
+paste them. I recommend doing it before the next publish.
+
+**Blocked.** Pixel and conversion IDs, as before.
+
+## 2026-11-06, video and photo tasks: proposal before building
+
+**Video on a listing (priorities item 2): caps and cost, for Kamal to decide.**
+- **Proposed caps:** up to 20 seconds, 720p (1280×720), sound kept, one video per listing, a hard cap of 8 MB after
+  compression (a typical 20-second phone clip comes out at 3 to 5 MB). Longer or bigger: the app asks for a shorter
+  clip. A stricter option is 15 seconds and 5 MB.
+- **How, in one line:** the phone re-encodes the clip to 720p before upload (the Android app and recent phone browsers
+  can; where a browser cannot, the clip is accepted only if it is already under the cap), stored in the same Supabase
+  storage as photos (a new bucket or a raised limit: the photo bucket allows 2 MB and images only, so this is a
+  schema change that goes live with schema.sql), deleted by the owner like a photo. Demo mode gets a sample clip.
+- **Cost per 1,000 listings:** at 4 MB each, 4 GB of storage. Supabase charges $0.0213 per GB a month beyond the
+  plan's quota, so 4 GB is about $0.09 a month, or roughly ₹7. Watching costs more than storing: every play streams
+  the clip, so 1,000 listings watched 50 times each is 200 GB a month of egress, within the Pro plan's 250 GB, and
+  $0.03 to $0.09 per GB beyond that.
+- **The real cost is the plan.** The project is on Supabase's Free plan: 1 GB of storage and 5 GB of egress a month.
+  Video on 1,000 listings needs the Pro plan ($25 a month, about ₹2,100; 100 GB storage and 250 GB egress included).
+  Worth knowing either way: photos alone (6 per listing at about 300 KB) fill the free 1 GB at roughly 550 listings,
+  so the upgrade is coming with or without video.
+- **My recommendation:** 20 s / 720p / 8 MB, and move to Pro when the first 100 real listings are in.
+
+**Auto-beautify photos (item 3):** no decision needed before building. Plan: on the phone, before upload, fix
+orientation from the photo's own data, auto-level brightness and contrast, lift shadows in dark rooms, light
+sharpening, resize to 1600 px and compress (the app already resizes to 1600 px at 82% quality). Light, colour and
+sharpness only; the original is kept per photo behind "Use original". Tilt straightening only if it is cheap and safe;
+otherwise left out and said so. Before-and-after examples will be in the report with the PR.
+
+Both start at the 10 pm shift as King set, unless Kamal says sooner.
+
 ## 2026-11-06, later
 
 **Answers for Salu (read-only, no code changed), Requests item 3.**
