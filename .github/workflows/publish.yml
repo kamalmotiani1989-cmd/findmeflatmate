@@ -37,12 +37,16 @@ jobs:
           git clone -q --depth=1 --filter=blob:none --sparse "$url" "$src"
           git -C "$src" sparse-checkout set flatmates
           echo "SRC_SHA=$(git -C "$src" rev-parse --short HEAD)" >> "$GITHUB_ENV"
-          # The app without the Android project, the database scripts or its README.
+          # The app without the Android project, the database scripts or its README, and without the
+          # internal folders (team briefs and reports, marketing plans, test suites), which are not for the public.
           # This repo's own files (workflow, README, CNAME, .nojekyll) are left alone.
           rsync -a --delete \
             --exclude=/.git/ --exclude=/.github/ --exclude=/README.md --exclude=/CNAME --exclude=/.nojekyll \
             --exclude=/android/ --exclude=/supabase/ --exclude=/ON_HOLD \
+            --exclude=/team/ --exclude=/marketing/ --exclude=/tests/ \
             "$src/flatmates/" ./
+          # Excluded paths are not removed by --delete, so drop any copy an earlier run left behind.
+          rm -rf team marketing tests
           echo "findmeflatmate.com" > CNAME
           touch .nojekyll
 
