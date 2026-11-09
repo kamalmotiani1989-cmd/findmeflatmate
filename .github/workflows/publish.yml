@@ -6,11 +6,15 @@ name: Publish FindMeFlatMate
 # and the Android app is copied to this repo's "flatmates-apk" release, so the download link
 # works even with NavigateMe private.
 # NavigateMe private: add a read-only token for it as the SOURCE_TOKEN secret here (see README).
-# Runs every 30 minutes and on demand (Actions -> Publish FindMeFlatMate -> Run workflow);
-# it commits only when the app has changed.
+# Runs on demand (Actions -> Publish FindMeFlatMate -> Run workflow), when NavigateMe asks for it (repository_dispatch
+# "publish", sent after a change to flatmates/; see README), and on a schedule as a fallback. It commits only when the
+# app has changed. GitHub runs scheduled jobs on a best-effort basis and drops many of those set for :00 and :30, the
+# busiest minutes: "*/30" fired only every 4 to 8 hours (6 to 9 Nov 2026), hence the odd minutes.
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "17,47 * * * *"
+  repository_dispatch:
+    types: [publish]
   workflow_dispatch:
 
 permissions:
