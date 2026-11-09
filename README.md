@@ -2,9 +2,20 @@
 
 This repo is the website at **https://findmeflatmate.com**. Its files are copied from the app's
 source, `flatmates/` in [kamalmotiani1989-cmd/NavigateMe](https://github.com/kamalmotiani1989-cmd/NavigateMe),
-by `.github/workflows/publish.yml` (every 30 minutes, or on demand from the Actions tab), which
-commits them to `main` and mirrors `main` to `gh-pages`. Change the app there, not here: copied
-files are overwritten on the next run.
+by `.github/workflows/publish.yml`, which commits them to `main` and mirrors `main` to `gh-pages`. Change the app
+there, not here: copied files are overwritten on the next run.
+
+## When it publishes
+
+- **On demand:** Actions → Publish FindMeFlatMate → Run workflow.
+- **When NavigateMe asks:** a `repository_dispatch` event of type `publish`. To have NavigateMe send it after every
+  change to `flatmates/`, create a fine-grained token (GitHub → Settings → Developer settings → Fine-grained tokens:
+  Only select repositories → findmeflatmate; Repository permissions → Contents: Read and write), and save it in
+  NavigateMe → Settings → Secrets and variables → Actions as `SITE_DISPATCH_TOKEN`. A step in NavigateMe's website
+  workflow then calls `POST /repos/kamalmotiani1989-cmd/findmeflatmate/dispatches` with `{"event_type":"publish"}`.
+  Never put the token in a file.
+- **Schedule (fallback):** at :17 and :47 past each hour. GitHub runs scheduled jobs on a best-effort basis; the
+  old every-30-minutes schedule (:00 and :30, the busiest minutes) fired only every 4 to 8 hours.
 
 GitHub Pages: Settings → Pages → Deploy from a branch → `gh-pages`, `/ (root)`, custom domain
 `findmeflatmate.com`, Enforce HTTPS.
