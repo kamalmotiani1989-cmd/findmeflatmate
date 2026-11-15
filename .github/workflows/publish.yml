@@ -144,10 +144,11 @@ jobs:
           else
             echo "Pages is not switched on yet: Settings -> Pages -> Deploy from a branch -> gh-pages / (root)." | tee -a "$GITHUB_STEP_SUMMARY"
           fi
-          # Before DNS points here the domain shows the registrar's parking page, so look for the app's title.
+          # Before DNS points here the domain shows the registrar's parking page, so look for the app's title
+          # (how it starts: the page's title is now "FindMeFlatMate: find flatmates who match your vibe").
           for u in https://findmeflatmate.com/ https://www.findmeflatmate.com/ http://findmeflatmate.com/; do
             code=$(curl -sL -o page.html -m 20 -w '%{http_code} at %{url_effective}' "$u" || echo unreachable)
-            grep -q "<title>FindMeFlatMate</title>" page.html 2>/dev/null && what="FindMeFlatMate" || what="not this site yet"
+            grep -q "<title>FindMeFlatMate" page.html 2>/dev/null && what="FindMeFlatMate" || what="not this site yet"
             echo "$u -> $code ($what)" | tee -a "$GITHUB_STEP_SUMMARY"
           done
           rm -f page.html
